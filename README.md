@@ -1,99 +1,102 @@
 # Task Manager REST API
 
-مشروع تعليمي يطبق REST API لإدارة المهام باستخدام FastAPI وPostgreSQL وNginx وDocker Compose.
+مشروع تعليمي هندسي يطبق معمارية REST API لإدارة المهام وتحديثها من تطبيق أحادي إلى خدمات مصغرة معزولة باستخدام FastAPI وPostgreSQL وNginx وDocker Compose.
 
-## المعمارية
+## 1. Project Description (وصف المشروع)
+تطبيق متطور لإدارة المهام يعتمد على فصل المكونات البرمجية لتسهيل التوسع وتحسين الأداء، حيث تم تحويل النظام بالكامل إلى بيئة حاويات معزولة تضمن الأمان واستمرارية البيانات.
 
+## 2. المعمارية (System Architecture Diagram)
 ```text
-Client :8080 → Nginx → API (internal :8000) → PostgreSQL → named volume db-data
+Client :8080 → Nginx (Reverse Proxy) → API (internal :8000) → PostgreSQL → named volume db-data
+```
+الخدمة الوحيدة التي تنشر منفذًا على الجهاز هي Nginx. لا يوجد منفذ مضيف مباشر للـ API أو قاعدة البيانات لضمان العزل الأمني الكامل.
+
+## 3. التقنيات المستخدمة (Technologies Used)
+- **Backend:** Python 3.12-slim / FastAPI
+- **Database:** PostgreSQL 16-alpine
+- **Reverse Proxy:** Nginx 1.27-alpine
+- **Orchestration:** Docker Engine & Docker Compose v2
+- **Version Control:** Git & GitHub
+
+## 4. هيكل المجلدات (Repository Directory Structure)
+```text
+cloud-project/
+├── .env.example
+├── .gitignore
+├── compose.yaml
+├── README.md
+├── api/
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   ├── requirements.txt
+│   └── app/
+│       ├── __init__.py
+│       └── main.py
+└── nginx/
+    └── nginx.conf
 ```
 
-الخدمة الوحيدة التي تنشر منفذًا على الجهاز هي Nginx. لا يوجد منفذ مضيف مباشر للـ API أو قاعدة البيانات.
+## 5. المتطلبات (Prerequisites)
+- Docker Desktop مع Docker Compose v2 مفعّل.
+- محرر الأكواد PyCharm (Community أو Professional).
+- أداة curl أو Postman للاختبار.
 
-## المتطلبات
-
-- Docker Desktop مع Docker Compose v2
-- PyCharm Community أو Professional
-- curl أو Postman للاختبار (اختياري)
-
-## فتح المشروع في PyCharm
-
-1. فك ضغط المشروع.
-2. افتح PyCharm واختر **Open**.
-3. اختر مجلد المشروع الذي يحتوي مباشرة على الملف `compose.yaml`.
-4. افتح **View → Tool Windows → Terminal**.
-5. شغّل Docker Desktop قبل تنفيذ أوامر Docker.
-
-PyCharm يستخدم لفتح وتعديل ملفات Python، بينما Docker Desktop يشغّل خدمات API وPostgreSQL وNginx. لا تشغّل `api/app/main.py` مباشرة في البداية؛ شغّل النظام من Terminal باستخدام Docker Compose.
-
-## إعداد Python في PyCharm (اختياري)
-
-يمكنك تثبيت Python 3.12 Interpreter في PyCharm لميزات المحرر مثل الإكمال التلقائي، لكن تشغيل المشروع الأساسي لا يحتاج تثبيت PostgreSQL أو Nginx على الجهاز؛ كلاهما يعمل داخل Docker.
-
-إذا طلب PyCharm تثبيت المكتبات للتعرف على الكود، استخدم `api/requirements.txt`. لا تغيّر `DATABASE_URL` إلى `localhost` عند تشغيل Docker؛ داخل Compose اسم قاعدة البيانات هو `database`.
-
-## التشغيل
-
-من جذر المشروع:
-
+## 6. أمر التشغيل بخطوة واحدة (One-Step Deployment Command)
+من جذر المشروع، شغّل الأمر التالي لبناء وتشغيل النظام بالكامل في الخلفية:
 ```bash
-docker compose config
 docker compose up -d --build
-docker compose ps
 ```
 
-افتح API عبر `http://localhost:8080`.
-
-## المسارات
+## 7. المسارات وتوثيق الـ API (REST API Endpoints)
+افتح الـ API عبر الرابط الموحد للبوابة: `http://localhost:8080`.
 
 | Method | Path | الوصف |
 |---|---|---|
-| GET | `/health` | فحص الخدمة |
-| GET | `/api/tasks` | عرض المهام |
-| GET | `/api/tasks/{id}` | عرض مهمة |
-| POST | `/api/tasks` | إنشاء مهمة |
-| PUT | `/api/tasks/{id}` | تعديل مهمة |
-| DELETE | `/api/tasks/{id}` | حذف مهمة |
+| GET | `/health` | فحص جاهزية الخدمة داخلياً |
+| GET | `/api/tasks` | عرض كافة المهام من قاعدة البيانات |
+| GET | `/api/tasks/{id}` | عرض تفاصيل مهمة محددة |
+| POST | `/api/tasks` | إنشاء مهمة جديدة (JSON Payload) |
+| PUT | `/api/tasks/{id}` | تعديل بيانات مهمة موجودة |
+| DELETE | `/api/tasks/{id}` | حذف مهمة نهائياً من النظام |
 
-مثال إنشاء مهمة:
-
+مثال لإنشاء مهمة عبر الـ CLI:
 ```bash
 curl -X POST http://localhost:8080/api/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Learn Docker","description":"Finish the course project","completed":false}'
 ```
 
-## التحقق من العزل والاستمرارية
-
+## 8. التحقق من العزل والاستمرارية (Isolation & Persistence Evidence)
+للتحقق من حجب منافذ الـ API داخلياً:
 ```bash
 docker compose ps
 docker compose port api 8000
 ```
+*(يجب ألا يعرض الأمر الأخير أي منفذ منشور للمستضيف الخارجي)*
 
-يجب ألا يعرض الأمر منفذًا منشورًا للـ API.
-
-لإثبات حفظ البيانات:
-
+لإثبات حفظ واستمرارية البيانات بعد إعادة التشغيل:
 ```bash
-# أنشئ سجلًا أولًا ثم نفذ:
+# أنشئ سجلًا أولًا باستخدام طلب POST ثم نفذ:
 docker compose down
 docker compose up -d
 curl http://localhost:8080/api/tasks
 ```
+تبقى البيانات محفوظة داخل الـ `db-data` لأن `docker compose down` يحافظ على الـ Named Volumes، بينما الأمر المخرب `docker compose down -v` يقوم بحذفها وتدمير السجلات.
 
-يبقى `db-data` لأن `docker compose down` لا يحذف named volumes. أما `docker compose down -v` فيحذف volume وقد يمسح البيانات.
+## 9. معلومات السجل الرقمي (OCI-Compliant Registry Information)
+الصور البرمجية الخاصة بالمشروع مرفوعة ومتاحة للعموم على السجل الرقمي:
+- **رابط المستودع:** `aymanamin5000/task-manager-api`
+- **أمر السحب المباشر:** `docker pull aymanamin5000/task-manager-api:v1.0.0`
 
-## إيقاف المشروع
+## 10. أعضاء الفريق والمساهمات (Team Members & Contributions)
+- **أيمن أمين الخليدي (Ayman-isArabBoss):** قام ببناء كود الـ API، كتابة ملف الـ Dockerfile بممارسات الأمان، إعداد الـ Reverse Proxy والـ Compose، وإتمام الرفع والتكامل على GitHub وDocker Hub.
 
-```bash
-docker compose logs
-docker compose down
-```
+## 11. الإصدار الحالي (Current Version)
+- **Version Tag:** `v1.0.0`
+- **Latest Build:** `latest`
 
-## الأمان
-
-- API يعمل داخل شبكة Docker ولا يملك host port.
-- صورة API مبنية من `python:3.12-slim`.
-- التطبيق يعمل بالمستخدم غير root `appuser`.
-- إعداد Nginx مركب بصلاحية قراءة فقط.
-- الإصدارات مثبتة في `requirements.txt`.
+## 12. الأمان وضوابط الحماية
+- الـ API يعمل داخل شبكة Docker معزولة تماماً بدون host port.
+- الصورة مبنية من نسخة خفيفة `python:3.12-slim` لحظر الثغرات.
+- الحاوية تعمل بمستخدم آمن وغير جذر `appuser`.
+- ملف إعدادات Nginx مركب بصلاحية القراءة فقط `read_only: true`.
